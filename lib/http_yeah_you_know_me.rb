@@ -25,15 +25,16 @@ class Server
     puts request_lines.inspect
 
     puts "Sending response."
-    response = "<pre>" +
-               "\r\n" +
+    response = "<pre>" + "\r\n" +
                ["Verb: #{request_lines[0].split[0]}",
-                "Path: #{}",
-                "Protocol: #{}",
-                "Host: #{}",
-                "Port: #{}",
-                "Origin: #{}",
-                "Accept:#{}"].join("\n") + "</pre>"
+                "Path: #{request_lines[0].split[1]}",
+                "Protocol: #{request_lines[0].split[2]}",
+                "Host: #{request_lines[1].split(":")[1].lstrip}",
+                "Port: #{request_lines[1].split(":")[2]}",
+                "Origin: #{request_lines[1].split(":")[1].lstrip}",
+                "Accept:#{request_lines.find do |i|
+                    i.include?("Accept")
+                 end.split(":")[1]}"].join("\n") + "</pre>"
 
     output = "<html><head></head><body>Hello World! (#{count})#{response}</body></html>"
     headers = ["http/1.1 200 ok",
@@ -52,6 +53,27 @@ class Server
   def close
     client.close
     puts "\nResponse complete, exiting."
+  end
+
+  def verb
+
+  end
+
+  def path
+
+  end
+
+  def protocol
+
+  end
+
+  def host
+  end
+
+  def port
+  end
+
+  def accept
   end
 
 end
