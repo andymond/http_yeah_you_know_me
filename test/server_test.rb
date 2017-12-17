@@ -1,4 +1,4 @@
-require './lib/http_yeah_you_know_me'
+require './lib/server'
 require 'minitest'
 require 'minitest/autorun'
 require 'minitest/pride'
