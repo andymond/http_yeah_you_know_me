@@ -4,7 +4,7 @@ require 'pry'
 class Server
 
   def initialize
-    @tcp_server = TCPServer.new(9292)
+    @tcp_server = TCPServer.open(9292)
     @count = 0
     @hello_count = 0
   end
@@ -16,7 +16,6 @@ class Server
   def start
     puts "Ready for a request"
     client = @tcp_server.accept
-
     request_lines = []
     while line = client.gets and !line.chomp.empty?
       request_lines << line.chomp
@@ -25,8 +24,7 @@ class Server
     puts request_lines.inspect
 
     puts "Sending response."
-
-    response = build_response(request_lines)
+    response = diagnostics(request_lines)
     output = output(response)
     headers = headers(output)
     client.puts headers
@@ -41,11 +39,11 @@ class Server
 
   def hello
     @hello_count += 1
-    output("Hello World! (#{hello_count})#{response}")
+    output("Hello World! (#{hello_count})")
   end
 
   def datetime
-
+    Time.now.ctime
   end
 
   def headers(content)
@@ -56,7 +54,7 @@ class Server
     "content-length: #{content.length}\r\n\r\n"].join("\r\n")
   end
 
-  def build_response(request_lines)
+  def diagnostics(request_lines)
     "<pre>" + "\r\n" +
    ["Verb: #{verb(request_lines)}",
     "Path: #{path(request_lines)}",
