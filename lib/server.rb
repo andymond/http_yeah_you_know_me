@@ -1,4 +1,5 @@
 require 'socket'
+require_relative 'word_finder'
 require 'pry'
 
 class Server
@@ -9,12 +10,8 @@ class Server
     @hello_count = 0
   end
 
-  def count
-    @count += 1
-  end
-
   def start
-    count
+    @count += 1
     puts "Ready for a request"
     client = @tcp_server.accept
     request_lines = []
@@ -25,17 +22,23 @@ class Server
     puts request_lines.inspect
 
     puts "Sending response."
-
     path = path(request_lines)
     case
       when path == "/"
         response = diagnostics(request_lines)
       when path == "/hello"
-        response = hello
+        response = hello + diagnostics(request_lines)
       when path == "/datetime"
-        response = datetime
+        response = datetime + diagnostics(request_lines)
+      when path.include?("/word_search")
+        response = word_search(value(path))
       when path == "/shutdown"
-        response = close
+        response = output("Total count:(#{@count})") + diagnostics(request_lines)
+        output = output(response)
+        headers = headers(output)
+        client.puts headers
+        client.puts output
+        client.close
     end
 
     output = output(response)
@@ -49,7 +52,6 @@ class Server
   def output(content)
     "<html><head></head><body>#{content}</body></html>"
   end
-
 
   def headers(content)
     ["http/1.1 200 ok",
@@ -79,18 +81,21 @@ class Server
     Time.now.ctime
   end
 
-  def close
-    count
-    #client.close
-    puts "\nResponse complete, exiting."
-  end
-
   def verb(request_lines)
     request_lines[0].split[0]
   end
 
   def path(request_lines)
     request_lines[0].split[1]
+  end
+
+  def value(path_line)
+    path_line.split("=")[1]
+  end
+
+  def word_search(word)
+    finder = WordFinder.new
+    finder.contains?(word)
   end
 
   def protocol(request_lines)
