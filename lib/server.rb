@@ -6,7 +6,7 @@ class Server
   def initialize
     @tcp_server = TCPServer.new(9292)
     @count = 0
-    start
+    @hello_count = 0
   end
 
   def count
@@ -21,7 +21,6 @@ class Server
     while line = client.gets and !line.chomp.empty?
       request_lines << line.chomp
     end
-
     puts "Got this request:"
     puts request_lines.inspect
 
@@ -29,19 +28,33 @@ class Server
 
     response = build_response(request_lines)
     output = output(response)
-    headers = ["http/1.1 200 ok",
-              "date: #{Time.now.strftime('%a, %e %b %Y %H:%M:%S %z')}",
-              "server: ruby",
-              "content-type: text/html; charset=iso-8859-1",
-              "content-length: #{output.length}\r\n\r\n"].join("\r\n")
+    headers = headers(output)
     client.puts headers
     client.puts output
-
     puts ["Wrote this response:", headers, output].join("\n")
-
     start
   end
 
+  def output(content)
+    "<html><head></head><body>#{content}</body></html>"
+  end
+
+  def hello
+    @hello_count += 1
+    output("Hello World! (#{hello_count})#{response}")
+  end
+
+  def datetime
+
+  end
+
+  def headers(content)
+    ["http/1.1 200 ok",
+    "date: #{Time.now.strftime('%a, %e %b %Y %H:%M:%S %z')}",
+    "server: ruby",
+    "content-type: text/html; charset=iso-8859-1",
+    "content-length: #{content.length}\r\n\r\n"].join("\r\n")
+  end
 
   def build_response(request_lines)
     "<pre>" + "\r\n" +
@@ -78,18 +91,6 @@ class Server
     request_lines.find do |i|
       i.include?("Accept")
     end.split(":")[1]
-  end
-
-  def output(content)
-    "<html><head></head><body>#{content}</body></html>"
-  end
-
-  def hello
-    output("Hello World! (#{count})#{response}")
-  end
-
-  def datetime
-
   end
 
   def close
