@@ -14,6 +14,7 @@ class Server
   end
 
   def start
+    count
     puts "Ready for a request"
     client = @tcp_server.accept
     request_lines = []
@@ -24,7 +25,19 @@ class Server
     puts request_lines.inspect
 
     puts "Sending response."
-    response = diagnostics(request_lines)
+
+    path = path(request_lines)
+    case
+      when path == "/"
+        response = diagnostics(request_lines)
+      when path == "/hello"
+        response = hello
+      when path == "/datetime"
+        response = datetime
+      when path == "/shutdown"
+        response = close
+    end
+
     output = output(response)
     headers = headers(output)
     client.puts headers
@@ -37,14 +50,6 @@ class Server
     "<html><head></head><body>#{content}</body></html>"
   end
 
-  def hello
-    @hello_count += 1
-    output("Hello World! (#{hello_count})")
-  end
-
-  def datetime
-    Time.now.ctime
-  end
 
   def headers(content)
     ["http/1.1 200 ok",
@@ -63,6 +68,21 @@ class Server
     "Port: #{port(request_lines)}",
     "Origin: #{host(request_lines)}",
     "Accept:#{accept(request_lines)}"].join("\n") + "</pre>"
+  end
+
+  def hello
+    @hello_count += 1
+    output("Hello World! (#{@hello_count})")
+  end
+
+  def datetime
+    Time.now.ctime
+  end
+
+  def close
+    count
+    #client.close
+    puts "\nResponse complete, exiting."
   end
 
   def verb(request_lines)
@@ -89,11 +109,6 @@ class Server
     request_lines.find do |i|
       i.include?("Accept")
     end.split(":")[1]
-  end
-
-  def close
-    client.close
-    puts "\nResponse complete, exiting."
   end
 
 end
