@@ -1,10 +1,11 @@
 class GuessingGame
 
-  attr_reader :guess, :number_generator
+  attr_accessor :guess
+  attr_reader :number_generator
 
-  def initialize(guess)
-    @guess = guess
-    @number_generator = rand(0..100)
+  def initialize(num1 = 0, num2 = 100)
+    @guess = nil
+    @number_generator = rand(num1..num2)
   end
 
   def number?(input)
