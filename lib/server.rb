@@ -14,15 +14,26 @@ class Server
     @count += 1
     puts "Ready for a request"
     client = @tcp_server.accept
+    request = request(client)
+    response_control = response_control(request, client)
+    response(response_control, client)
+    start
+  end
+
+  def request(client)
     request_lines = []
     while line = client.gets and !line.chomp.empty?
       request_lines << line.chomp
     end
     puts "Got this request:"
     puts request_lines.inspect
+    request_lines
+  end
 
+  def response_control(request_lines, client)
     puts "Sending response."
     path = path(request_lines)
+    verb = verb(request_lines)
     case
       when path == "/"
         response = diagnostics(request_lines)
@@ -32,21 +43,26 @@ class Server
         response = datetime + diagnostics(request_lines)
       when path.include?("/word_search")
         response = word_search(value(path))
+      when path == "/start_game" && verb == "POST"
+        response = "Good luck!" #game init
+      when path == "/game" && verb == "GET"
+        response = "how many guesses + if so, 2 hi or 2 lo"
+      when path == "/game" && verb == "POST"
+        response == "sends guess & redirects to gets + /game"
       when path == "/shutdown"
         response = output("Total count:(#{@count})") + diagnostics(request_lines)
-        output = output(response)
-        headers = headers(output)
-        client.puts headers
-        client.puts output
+        response(response, client)
         client.close
     end
+    response
+  end
 
+  def response(response, client)
     output = output(response)
     headers = headers(output)
     client.puts headers
     client.puts output
     puts ["Wrote this response:", headers, output].join("\n")
-    start
   end
 
   def output(content)
