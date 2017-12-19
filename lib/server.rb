@@ -1,4 +1,5 @@
 require 'socket'
+require_relative 'word_finder'
 require 'pry'
 
 class Server
@@ -9,11 +10,8 @@ class Server
     @hello_count = 0
   end
 
-  def count
-    @count += 1
-  end
-
   def start
+    @count += 1
     puts "Ready for a request"
     client = @tcp_server.accept
     request_lines = []
@@ -24,7 +22,25 @@ class Server
     puts request_lines.inspect
 
     puts "Sending response."
-    response = diagnostics(request_lines)
+    path = path(request_lines)
+    case
+      when path == "/"
+        response = diagnostics(request_lines)
+      when path == "/hello"
+        response = hello + diagnostics(request_lines)
+      when path == "/datetime"
+        response = datetime + diagnostics(request_lines)
+      when path.include?("/word_search")
+        response = word_search(value(path))
+      when path == "/shutdown"
+        response = output("Total count:(#{@count})") + diagnostics(request_lines)
+        output = output(response)
+        headers = headers(output)
+        client.puts headers
+        client.puts output
+        client.close
+    end
+
     output = output(response)
     headers = headers(output)
     client.puts headers
@@ -35,15 +51,6 @@ class Server
 
   def output(content)
     "<html><head></head><body>#{content}</body></html>"
-  end
-
-  def hello
-    @hello_count += 1
-    output("Hello World! (#{hello_count})")
-  end
-
-  def datetime
-    Time.now.ctime
   end
 
   def headers(content)
@@ -65,12 +72,30 @@ class Server
     "Accept:#{accept(request_lines)}"].join("\n") + "</pre>"
   end
 
+  def hello
+    @hello_count += 1
+    output("Hello World! (#{@hello_count})")
+  end
+
+  def datetime
+    Time.now.ctime
+  end
+
   def verb(request_lines)
     request_lines[0].split[0]
   end
 
   def path(request_lines)
     request_lines[0].split[1]
+  end
+
+  def value(path_line)
+    path_line.split("=")[1]
+  end
+
+  def word_search(word)
+    finder = WordFinder.new
+    finder.contains?(word)
   end
 
   def protocol(request_lines)
@@ -89,11 +114,6 @@ class Server
     request_lines.find do |i|
       i.include?("Accept")
     end.split(":")[1]
-  end
-
-  def close
-    client.close
-    puts "\nResponse complete, exiting."
   end
 
 end
