@@ -23,6 +23,7 @@ class Server
 
     puts "Sending response."
     path = path(request_lines)
+    verb = verb(request_lines)
     case
       when path == "/"
         response = diagnostics(request_lines)
@@ -32,6 +33,12 @@ class Server
         response = datetime + diagnostics(request_lines)
       when path.include?("/word_search")
         response = word_search(value(path))
+      when path == "/start_game" && verb == "POST"
+        response = "Good luck!" #game init
+      when path == "/game" && verb == "GET"
+        response = "how many guesses + if so, 2 hi or 2 lo"
+      when path == "/game" && verb == "POST"
+        response == "sends guess & redirects to gets + /game"
       when path == "/shutdown"
         response = output("Total count:(#{@count})") + diagnostics(request_lines)
         output = output(response)
