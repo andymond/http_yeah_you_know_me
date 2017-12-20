@@ -11,17 +11,17 @@ class GuessingGame
 
   def play(guess)
     @guess_count += 1
-    @guess = guess
-    number?(guess)
-    guess_validator
+    @guess = guess.to_i
+    guess_validator(guess)
   end
 
   def number?(input)
     input.to_s =~ /[0-9]/ ? true : false
   end
 
-  def guess_validator
+  def guess_validator(guess)
     if number?(guess)
+      guess.to_i
       guess_match
     else
       "That's not a number! Try again."

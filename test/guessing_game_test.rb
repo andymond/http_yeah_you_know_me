@@ -65,7 +65,12 @@ class GameTest < Minitest::Test
     game = GuessingGame.new
     game.guess = "guess"
 
-    assert_equal "That's not a number! Try again.", game.guess_validator
+    assert_equal "That's not a number! Try again.", game.guess_validator(game.guess)
+
+    game.guess = "thing"
+
+    assert_equal "That's not a number! Try again.", game.guess_validator(game.guess)
+
   end
 
   def test_guess_match_returns_match_based_on_match
@@ -87,6 +92,13 @@ class GameTest < Minitest::Test
     game.guess = 2
 
     assert_equal "Too high! Guess again!", game.guess_match
+  end
+
+  def test_guess_validator_compares_guess_in_guess_match
+    game = GuessingGame.new(1,1)
+    game.guess = 1
+
+    assert_equal "You guessed it!", game.guess_validator(game.guess)
   end
 
   def test_guess_can_change

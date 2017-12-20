@@ -52,7 +52,7 @@ class Server
       when path == "/game" && verb == "GET"
         response = @game.feedback
       when path == "/game" && verb == "POST"
-        guess = @parser.get_guess
+        guess = @parser.get_guess(request_lines, client)
         response = @game.play(guess)
       when path == "/shutdown"
         response = output("Total count:(#{@count})") + diagnostics(request_lines)
@@ -111,8 +111,5 @@ class Server
     @game = GuessingGame.new
     "Good Luck!"
   end
-
-
-
 
 end
