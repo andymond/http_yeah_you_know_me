@@ -54,6 +54,7 @@ class Server
       when path == "/game" && verb == "POST"
         guess = @parser.get_guess(request_lines, client)
         response = @game.play(guess)
+        redirect_response(response, client)
       when path == "/shutdown"
         response = output("Total count:(#{@count})") + diagnostics(request_lines)
         response(response, client)
@@ -80,6 +81,22 @@ class Server
     "server: ruby",
     "content-type: text/html; charset=iso-8859-1",
     "content-length: #{content.length}\r\n\r\n"].join("\r\n")
+  end
+
+  def redirect(content)
+    redirect_headers = headers(content).split("\r\n")
+    redirect_headers.shift
+    redirect_headers.unshift("HTTP/1.1 302 Moved Permanently")
+    redirect_headers.insert(1, "Location: http://127.0.0.1:9292/game")
+    redirect_headers.join("\r\n")
+  end
+
+  def redirect_response(response, client)
+    output = output(response)
+    redirect = redirect(output)
+    client.puts redirect
+    client.puts output
+    puts ["Wrote this response:", redirect].join("\n")
   end
 
   def diagnostics(request_lines)

@@ -11,7 +11,7 @@ class GuessingGame
 
   def play(guess)
     @guess_count += 1
-    @guess = guess.to_i
+    @guess = guess
     guess_validator(guess)
   end
 
@@ -21,14 +21,13 @@ class GuessingGame
 
   def guess_validator(guess)
     if number?(guess)
-      guess.to_i
-      guess_match
+      guess_match(guess.to_i)
     else
       "That's not a number! Try again."
     end
   end
 
-  def guess_match
+  def guess_match(guess)
     if guess == number_generator
       "You guessed it!"
     elsif guess < number_generator
@@ -39,7 +38,7 @@ class GuessingGame
   end
 
   def feedback
-    "Number of guesses: (#{@guess_count}) Last guess #{guess}, #{guess_match}"
+    "Number of guesses: (#{@guess_count}) Last guess: '#{guess}', #{guess_validator(guess).downcase}"
   end
 
 end
