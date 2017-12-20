@@ -38,7 +38,7 @@ class GuessingGame
   end
 
   def feedback
-    "Number of guesses: (#{@guess_count}) Last guess: '#{guess}', #{guess_validator(guess).downcase}"
+    "Number of guesses: (#{@guess_count}) Last guess: #{guess} ... #{guess_validator(guess).downcase}"
   end
 
 end
