@@ -1,11 +1,14 @@
 require 'socket'
-require_relative 'word_finder'
+require './lib/word_finder'
+require './lib/guessing_game'
+require './lib/request_parser'
 require 'pry'
 
 class Server
 
   def initialize
     @tcp_server = TCPServer.open(9292)
+    @parser = RequestParser.new
     @count = 0
     @hello_count = 0
   end
@@ -32,8 +35,8 @@ class Server
 
   def response_control(request_lines, client)
     puts "Sending response."
-    path = path(request_lines)
-    verb = verb(request_lines)
+    path = @parser.path(request_lines)
+    verb = @parser.verb(request_lines)
     case
       when path == "/"
         response = diagnostics(request_lines)
@@ -42,13 +45,16 @@ class Server
       when path == "/datetime"
         response = datetime + diagnostics(request_lines)
       when path.include?("/word_search")
-        response = word_search(value(path))
+        word = @parser.value(path)
+        response = word_search(word)
       when path == "/start_game" && verb == "POST"
-        response = "Good luck!" #game init
+        response = start_game
       when path == "/game" && verb == "GET"
-        response = "how many guesses + if so, 2 hi or 2 lo"
+        response = @game.feedback
       when path == "/game" && verb == "POST"
-        response == "sends guess & redirects to gets + /game"
+        guess = @parser.get_guess(request_lines, client)
+        response = @game.play(guess)
+        redirect_response(response, client)
       when path == "/shutdown"
         response = output("Total count:(#{@count})") + diagnostics(request_lines)
         response(response, client)
@@ -62,7 +68,7 @@ class Server
     headers = headers(output)
     client.puts headers
     client.puts output
-    puts ["Wrote this response:", headers, output].join("\n")
+    puts ["Wrote this response:", headers].join("\n")
   end
 
   def output(content)
@@ -77,15 +83,31 @@ class Server
     "content-length: #{content.length}\r\n\r\n"].join("\r\n")
   end
 
+  def redirect(content)
+    redirect_headers = headers(content).split("\r\n")
+    redirect_headers.shift
+    redirect_headers.unshift("HTTP/1.1 302 Moved Permanently")
+    redirect_headers.insert(1, "Location: http://127.0.0.1:9292/game")
+    redirect_headers.join("\r\n")
+  end
+
+  def redirect_response(response, client)
+    output = output(response)
+    redirect = redirect(output)
+    client.puts redirect
+    client.puts output
+    puts ["Wrote this response:", redirect].join("\n")
+  end
+
   def diagnostics(request_lines)
     "<pre>" + "\r\n" +
-   ["Verb: #{verb(request_lines)}",
-    "Path: #{path(request_lines)}",
-    "Protocol: #{protocol(request_lines)}",
-    "Host: #{host(request_lines)}",
-    "Port: #{port(request_lines)}",
-    "Origin: #{host(request_lines)}",
-    "Accept:#{accept(request_lines)}"].join("\n") + "</pre>"
+   ["Verb: #{@parser.verb(request_lines)}",
+    "Path: #{@parser.path(request_lines)}",
+    "Protocol: #{@parser.protocol(request_lines)}",
+    "Host: #{@parser.host(request_lines)}",
+    "Port: #{@parser.port(request_lines)}",
+    "Origin: #{@parser.host(request_lines)}",
+    "Accept:#{@parser.accept(request_lines)}"].join("\n") + "</pre>"
   end
 
   def hello
@@ -97,39 +119,14 @@ class Server
     Time.now.ctime
   end
 
-  def verb(request_lines)
-    request_lines[0].split[0]
-  end
-
-  def path(request_lines)
-    request_lines[0].split[1]
-  end
-
-  def value(path_line)
-    path_line.split("=")[1]
-  end
-
   def word_search(word)
     finder = WordFinder.new
     finder.contains?(word)
   end
 
-  def protocol(request_lines)
-    request_lines[0].split[2]
-  end
-
-  def host(request_lines)
-    request_lines[1].split(":")[1].lstrip
-  end
-
-  def port(request_lines)
-    request_lines[1].split(":")[2]
-  end
-
-  def accept(request_lines)
-    request_lines.find do |i|
-      i.include?("Accept")
-    end.split(":")[1]
+  def start_game
+    @game = GuessingGame.new
+    "Good Luck!"
   end
 
 end

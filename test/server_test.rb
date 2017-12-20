@@ -29,6 +29,9 @@ class ServerTest < Minitest::Test
 
   end
 
+  def test_response_control
+  end
+
   def test_respond_returns_string
 
   end
