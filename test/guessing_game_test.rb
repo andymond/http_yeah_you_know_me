@@ -17,6 +17,24 @@ class GameTest < Minitest::Test
     assert_nil game.guess
   end
 
+  def test_guess_count_starts_at_zero
+    game = GuessingGame.new
+
+    assert game.guess_count.zero?
+  end
+
+  def test_guess_count_goes_up_with_guesses
+    game = GuessingGame.new
+    game.play(1)
+    game.play(3)
+
+    assert_equal 2, game.guess_count
+
+    game.play("kookie krisps")
+
+    assert_equal 3, game.guess_count
+  end
+
   def test_guess_can_change
     game = GuessingGame.new
 
