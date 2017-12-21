@@ -48,7 +48,12 @@ class Server
         word = @parser.value(path)
         response = word_search(word)
       when path == "/start_game" && verb == "POST"
-        response = start_game
+        if @game.nil?
+          response = start_game
+        else
+          response = html_formatter("Forbidden")
+          forbidden_response(response, client)
+        end
       when path == "/game" && verb == "GET"
         response = @game.feedback
       when path == "/game" && verb == "POST"
@@ -56,22 +61,28 @@ class Server
         response = @game.play(guess)
         redirect_response(response, client)
       when path == "/shutdown"
-        response = output("Total count:(#{@count})") + diagnostics(request_lines)
+        response = html_formatter("Total count:(#{@count})") + diagnostics(request_lines)
         response(response, client)
         client.close
+      when path == "/force_error"
+        response = html_formatter("ServerError")
+        server_error_response(response, client)
+      else
+        response = html_formatter("404 not found")
+        not_found_response(response, client)
     end
     response
   end
 
   def response(response, client)
-    output = output(response)
-    headers = headers(output).join("\r\n")
+    formatted_response = html_formatter(response)
+    headers = headers(formatted_response).join("\r\n")
     client.puts headers
-    client.puts output
+    client.puts formatted_response
     puts ["Wrote this response:", headers].join("\n")
   end
 
-  def output(content)
+  def html_formatter(content)
     "<html><head></head><body>#{content}</body></html>"
   end
 
@@ -84,31 +95,57 @@ class Server
   end
 
   def redirect(content)
-    redirect_headers = headers("http/1.1 302 Moved Permanently", content)
+    redirect_headers = headers("http/1.1 301 Moved Permanently", content)
     redirect_headers.insert(1, "Location: http://127.0.0.1:9292/game")
     redirect_headers
   end
 
   def redirect_response(response, client)
-    output = output(response)
-    redirect = redirect(output)
+    formatted_response = html_formatter(response)
+    redirect = redirect(formatted_response).join("\r\n")
     client.puts redirect
-    client.puts output
+    client.puts formatted_response
     puts ["Wrote this response:", redirect].join("\n")
   end
 
-  # def not_found(content)
-  #   not_found_headers = headers("http/1.1 404 Not Found", content)
-  #   not_found_headers.join("\r\n")
-  # end
+  def not_found(content)
+    not_found_headers = headers("http/1.1 404 Not Found", content)
+    not_found_headers
+  end
 
-  # def forbidden
-  #   headers("http/1.1 403 Forbidden")
-  # end
-  #
-  # def error
-  #   headers("http/1.1 500 Internal Server Error")
-  # end
+  def not_found_response(response, client)
+    formatted_response = html_formatter(response)
+    not_found = not_found(formatted_response).join("\r\n")
+    client.puts not_found
+    client.puts formatted_response
+    puts ["Wrote this response:", not_found].join("\n")
+  end
+
+  def forbidden(content)
+    forbidden_headers = headers("http/1.1 403 Forbidden", content)
+    forbidden_headers
+  end
+
+  def forbidden_response(response, client)
+    formatted_response = html_formatter(response)
+    forbidden = forbidden(formatted_response).join("\r\n")
+    client.puts forbidden
+    client.puts formatted_response
+    puts ["Wrote this response:", forbidden].join("\n")
+  end
+
+  def server_error(content)
+    server_error_headers = headers("http/1.1 500 Internal Server Error", content)
+    server_error_headers
+  end
+
+  def server_error_response(response, client)
+    formatted_response = html_formatter(response)
+    server_error = server_error(formatted_response).join("\r\n")
+    client.puts server_error
+    client.puts formatted_response
+    puts ["Wrote this response:", server_error].join("\n")
+  end
 
   def diagnostics(request_lines)
     "<pre>" + "\r\n" +
@@ -123,7 +160,7 @@ class Server
 
   def hello
     @hello_count += 1
-    output("Hello World! (#{@hello_count})")
+    html_formatter("Hello World! (#{@hello_count})")
   end
 
   def datetime
