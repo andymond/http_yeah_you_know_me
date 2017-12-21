@@ -16,6 +16,7 @@ class ServerTest < Minitest::Test
   end
 
   def test_server_starts_when_method_called
+    skip
     server = Server.new
 
     server.start
@@ -33,6 +34,10 @@ class ServerTest < Minitest::Test
   end
 
   def test_respond_returns_string
+
+  end
+
+  def test_redirect_changes_headers
 
   end
 

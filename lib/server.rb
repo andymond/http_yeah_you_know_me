@@ -65,7 +65,7 @@ class Server
 
   def response(response, client)
     output = output(response)
-    headers = headers(output)
+    headers = headers(output).join("\r\n")
     client.puts headers
     client.puts output
     puts ["Wrote this response:", headers].join("\n")
@@ -75,20 +75,18 @@ class Server
     "<html><head></head><body>#{content}</body></html>"
   end
 
-  def headers(content)
-    ["http/1.1 200 ok",
+  def headers(response_code = "http/1.1 200 ok", content)
+    [response_code,
     "date: #{Time.now.strftime('%a, %e %b %Y %H:%M:%S %z')}",
     "server: ruby",
     "content-type: text/html; charset=iso-8859-1",
-    "content-length: #{content.length}\r\n\r\n"].join("\r\n")
+    "content-length: #{content.length}\r\n\r\n"]
   end
 
   def redirect(content)
-    redirect_headers = headers(content).split("\r\n")
-    redirect_headers.shift
-    redirect_headers.unshift("HTTP/1.1 302 Moved Permanently")
+    redirect_headers = headers("http/1.1 302 Moved Permanently", content)
     redirect_headers.insert(1, "Location: http://127.0.0.1:9292/game")
-    redirect_headers.join("\r\n")
+    redirect_headers
   end
 
   def redirect_response(response, client)
@@ -98,6 +96,19 @@ class Server
     client.puts output
     puts ["Wrote this response:", redirect].join("\n")
   end
+
+  # def not_found(content)
+  #   not_found_headers = headers("http/1.1 404 Not Found", content)
+  #   not_found_headers.join("\r\n")
+  # end
+
+  # def forbidden
+  #   headers("http/1.1 403 Forbidden")
+  # end
+  #
+  # def error
+  #   headers("http/1.1 500 Internal Server Error")
+  # end
 
   def diagnostics(request_lines)
     "<pre>" + "\r\n" +
