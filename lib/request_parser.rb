@@ -19,11 +19,15 @@ class RequestParser
   end
 
   def host(request_lines)
-    request_lines[1].split(":")[1].lstrip
+    request_lines.find do |line|
+      line.include?("Host")
+    end.split(":")[1].lstrip
   end
 
   def port(request_lines)
-    request_lines[1].split(":")[2]
+    request_lines.find do |line|
+    line.include?("Host")
+    end.split(":")[2]
   end
 
   def accept(request_lines)

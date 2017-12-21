@@ -1,3 +1,7 @@
+require 'simplecov'
+SimpleCov.start do
+  add_filter "/test/"
+end
 require './lib/guessing_game'
 require 'minitest'
 require 'minitest/autorun'

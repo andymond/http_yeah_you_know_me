@@ -6,6 +6,8 @@ require 'pry'
 
 class Server
 
+  attr_reader :count, :hello_count
+
   def initialize
     @tcp_server = TCPServer.open(9292)
     @parser = RequestParser.new

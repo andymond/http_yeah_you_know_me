@@ -1,44 +1,32 @@
-require './lib/server'
+require 'simplecov'
+SimpleCov.start do
+  add_filter "/test/"
+end
 require 'minitest'
 require 'minitest/autorun'
 require 'minitest/pride'
+require 'faraday'
 
 class ServerTest < Minitest::Test
 
-  def test_server_exists
-    server = Server.new
+  def test_root_url
+    response = Faraday.get "http://127.0.0.1:9292/"
 
-    assert_instance_of Server, server
+
+    assert_equal "<html><head></head><body><pre>\r\nVerb: GET\nPath: /\nProtocol: HTTP/1.1\nHost: 127.0.0.1\nPort: 9292\nOrigin: 127.0.0.1\nAccept:gzip;q=1.0,deflate;q=0.6,identity;q=0.3</pre></body></html>", response.body
   end
 
-  def test_count_starts_at_zero
+  def test_hello_world
+    response = Faraday.get "http://127.0.0.1:9292/hello"
 
-  end
-
-  def test_server_starts_when_method_called
-    skip
-    server = Server.new
-
-    server.start
-  end
-
-  def test_count_increases_by_one_each_start
-
-  end
-
-  def test_request_returns_array
-
-  end
-
-  def test_response_control
-  end
-
-  def test_respond_returns_string
-
-  end
-
-  def test_redirect_changes_headers
-
+    assert_equal "<html><head></head><body><html><head></head><body>Hello World! (1)</body></html><pre>\r
+Verb: GET
+Path: /hello
+Protocol: HTTP/1.1
+Host: 127.0.0.1
+Port: 9292
+Origin: 127.0.0.1
+Accept:gzip;q=1.0,deflate;q=0.6,identity;q=0.3</pre></body></html>", response.body
   end
 
 end

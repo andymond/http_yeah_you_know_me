@@ -1,3 +1,7 @@
+require 'simplecov'
+SimpleCov.start do
+  add_filter "/test/"
+end
 require './lib/request_parser'
 require 'minitest'
 require 'minitest/autorun'
