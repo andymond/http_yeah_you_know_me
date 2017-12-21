@@ -1,10 +1,4 @@
-class RequestParser
-
-  attr_reader :request_lines
-
-  def initialize
-    @request_lines = request_lines
-  end
+module RequestParser
 
   def verb(request_lines)
     request_lines[0].split[0]
@@ -26,7 +20,7 @@ class RequestParser
 
   def port(request_lines)
     request_lines.find do |line|
-    line.include?("Host")
+      line.include?("Host")
     end.split(":")[2]
   end
 
