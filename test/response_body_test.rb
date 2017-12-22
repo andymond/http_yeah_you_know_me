@@ -15,11 +15,9 @@ class ResponseBodyTest < Minitest::Test
   include ResponseBody
 
   def test_html_formatter_interpolates_content_into_html
+    content = "yo"
 
-  end
-
-  def test_diagnostics_processes_request_lines_properly
-
+    assert_equal "<html><head></head><body>yo</body></html>", html_formatter(content)
   end
 
   def test_hello_increases_count
@@ -27,7 +25,7 @@ class ResponseBodyTest < Minitest::Test
   end
 
   def test_hello_returns_string_with_hello_world_and_number
-    assert_equal "<html><head></head><body>Hello World! (#{@hello_count})</body></html>", hello
+
   end
 
   def test_datetime_returns_datetime

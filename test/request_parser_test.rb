@@ -63,6 +63,25 @@ class RequestParserTest < Minitest::Test
     assert_nil value("/")
   end
 
+  def test_diagnostics_returns_appropriate_strings
+    assert_equal "<pre>\r
+Verb: GET
+Path: /
+Protocol: HTTP/1.1
+Host: 127.0.0.1
+Port: 9292
+Origin: 127.0.0.1
+Accept:*/*</pre>", diagnostics(GET_REQUEST)
+    assert_equal "<pre>\r
+Verb: POST
+Path: /hello
+Protocol: HTTP/1.1
+Host: 127.0.0.1
+Port: 9292
+Origin: 127.0.0.1
+Accept:*/*</pre>", diagnostics(POST_REQUEST)
+  end
+
   def test_get_content_length_returns_content_length_integer
     assert_equal 224, get_content_length(POST_REQUEST)
     assert_nil get_content_length(GET_REQUEST)

@@ -15,7 +15,6 @@ class Server
     @tcp_server = TCPServer.open(9292)
     @count = 0
     @hello_count = 0
-    @status_code = nil
   end
 
   def start
@@ -59,11 +58,15 @@ class Server
       when path == "/start_game" && verb == "POST"
         if @game.nil?
           response = start_game
-          @status_code = "http/1.1 200 ok"
+          @status_code = "http/1.1 301 Moved Permanently"
+          @location = "Location: http://127.0.0.1:9292/start_game"
         else
           response = html_formatter("Forbidden")
           @status_code = "http/1.1 403 Forbidden"
         end
+      when path == "/start_game" && verb == "GET"
+        response = html_formatter("POST a guess in the body of /game, good luck!")
+        @status_code = "http/1.1 200 ok"
       when path == "/game" && verb == "GET"
         response = @game.feedback
         @status_code = "http/1.1 200 ok"
@@ -71,6 +74,7 @@ class Server
         guess = get_guess(request_lines, client)
         response = @game.play(guess)
         @status_code = "http/1.1 301 Moved Permanently"
+        @location = "Location: http://127.0.0.1:9292/game"
       when path == "/shutdown"
         response = html_formatter("Total count:(#{@count})")
         @status_code = "http/1.1 200 ok"
@@ -90,7 +94,7 @@ class Server
     @formatted_response = html_formatter(response)
     headers = headers(@formatted_response)
     if @status_code == "http/1.1 301 Moved Permanently"
-      headers.insert(1, "Location: http://127.0.0.1:9292/game")
+      headers.insert(1, @location)
     end
     headers
   end

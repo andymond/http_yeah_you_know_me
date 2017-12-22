@@ -34,6 +34,17 @@ module RequestParser
       path_line.split("=")[1]
   end
 
+  def diagnostics(request_lines)
+    "<pre>" + "\r\n" +
+   ["Verb: #{verb(request_lines)}",
+    "Path: #{path(request_lines)}",
+    "Protocol: #{protocol(request_lines)}",
+    "Host: #{host(request_lines)}",
+    "Port: #{port(request_lines)}",
+    "Origin: #{host(request_lines)}",
+    "Accept:#{accept(request_lines)}"].join("\n") + "</pre>"
+  end
+
   def get_content_length(request_lines)
     body = request_lines.find do |line|
       line.include?("Content-Length")
