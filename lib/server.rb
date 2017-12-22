@@ -22,7 +22,7 @@ class Server
     puts "Ready for a request"
     @client = @tcp_server.accept
     response_control = response_control(request)
-    response = response(response_control)
+    response = responder(response_control)
     client_responder(response)
     start
   end
@@ -42,55 +42,55 @@ class Server
     path = path(request_lines)
     verb = verb(request_lines)
     case
-      when path == "/"
-        response = diagnostics(request_lines)
-        @status_code = "http/1.1 200 ok"
-      when path == "/hello"
-        response = hello + diagnostics(request_lines)
-        @status_code = "http/1.1 200 ok"
-      when path == "/datetime"
-        response = datetime + diagnostics(request_lines)
-        @status_code = "http/1.1 200 ok"
-      when path.include?("/word_search")
-        word = value(path)
-        response = word_search(word)
-        @status_code = "http/1.1 200 ok"
-      when path == "/start_game" && verb == "POST"
-        if @game.nil?
-          response = start_game
-          @status_code = "http/1.1 301 Moved Permanently"
-          @location = "Location: http://127.0.0.1:9292/start_game"
-        else
-          response = html_formatter("Forbidden")
-          @status_code = "http/1.1 403 Forbidden"
-        end
-      when path == "/start_game" && verb == "GET"
-        response = html_formatter("POST a guess in the body of /game, good luck!")
-        @status_code = "http/1.1 200 ok"
-      when path == "/game" && verb == "GET"
-        response = @game.feedback
-        @status_code = "http/1.1 200 ok"
-      when path == "/game" && verb == "POST"
-        guess = get_guess(request_lines, client)
-        response = @game.play(guess)
+    when path == "/"
+      response = diagnostics(request_lines)
+      @status_code = "http/1.1 200 ok"
+    when path == "/hello"
+      response = hello + diagnostics(request_lines)
+      @status_code = "http/1.1 200 ok"
+    when path == "/datetime"
+      response = datetime + diagnostics(request_lines)
+      @status_code = "http/1.1 200 ok"
+    when path.include?("/word_search")
+      word = value(path)
+      response = word_search(word)
+      @status_code = "http/1.1 200 ok"
+    when path == "/start_game" && verb == "POST"
+      if @game.nil?
+        response = start_game
         @status_code = "http/1.1 301 Moved Permanently"
-        @location = "Location: http://127.0.0.1:9292/game"
-      when path == "/shutdown"
-        response = html_formatter("Total count:(#{@count})")
-        @status_code = "http/1.1 200 ok"
-        response(response)
-        client.close
-      when path == "/force_error"
-        response = html_formatter("ServerError")
-        @status_code = "http/1.1 500 Internal Server Error"
+        @location = "Location: http://127.0.0.1:9292/start_game"
       else
-        response = html_formatter("404 not found")
-        @status_code = "http/1.1 404 Not Found"
+        response = html_formatter("Forbidden")
+        @status_code = "http/1.1 403 Forbidden"
+      end
+    when path == "/start_game" && verb == "GET"
+      response = html_formatter("POST a guess in the body of /game, good luck!")
+      @status_code = "http/1.1 200 ok"
+    when path == "/game" && verb == "GET"
+      response = @game.feedback
+      @status_code = "http/1.1 200 ok"
+    when path == "/game" && verb == "POST"
+      guess = get_guess(request_lines, client)
+      response = @game.play(guess)
+      @status_code = "http/1.1 301 Moved Permanently"
+      @location = "Location: http://127.0.0.1:9292/game"
+    when path == "/shutdown"
+      response = html_formatter("Total count:(#{@count})")
+      @status_code = "http/1.1 200 ok"
+      responder(response)
+      client.close
+    when path == "/force_error"
+      response = html_formatter("ServerError")
+      @status_code = "http/1.1 500 Internal Server Error"
+    else
+      response = html_formatter("404 not found")
+      @status_code = "http/1.1 404 Not Found"
     end
     response
   end
 
-  def response(response)
+  def responder(response)
     @formatted_response = html_formatter(response)
     headers = headers(@formatted_response)
     if @status_code == "http/1.1 301 Moved Permanently"

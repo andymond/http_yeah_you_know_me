@@ -79,23 +79,20 @@ class GameTest < Minitest::Test
 
   def test_guess_match_returns_match_based_on_match
     game = GuessingGame.new(1,1)
-    game.guess = 1
 
-    assert_equal "You guessed it!", game.guess_match
+    assert_equal "You guessed it!", game.guess_match(1)
   end
 
   def test_guess_match_returns_too_low_if_guess_low
     game = GuessingGame.new(1,1)
-    game.guess = 0
 
-    assert_equal "Too low! Guess again!", game.guess_match
+    assert_equal "Too low! Guess again!", game.guess_match(0)
   end
 
   def test_guess_match_returns_too_hi_if_guess_hi
     game = GuessingGame.new(1,1)
-    game.guess = 2
 
-    assert_equal "Too high! Guess again!", game.guess_match
+    assert_equal "Too high! Guess again!", game.guess_match(2)
   end
 
   def test_guess_validator_compares_guess_in_guess_match
