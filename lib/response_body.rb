@@ -1,6 +1,16 @@
-module ResponseBody
+class ResponseBody
 
   attr_reader :game, :finder
+  attr_accessor :count, :hello_count
+
+  def initialize
+    @count = 0
+    @hello_count = 0
+  end
+
+  def count
+    @count += 1
+  end
 
   def html_formatter(content)
     "<html><head></head><body>#{content}</body></html>"

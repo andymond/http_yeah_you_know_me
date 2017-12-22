@@ -7,18 +7,16 @@ require 'pry'
 
 class Server
   include RequestParser
-  include ResponseBody
 
-  attr_accessor :client
+  attr_accessor :client, :response_body
 
   def initialize
     @tcp_server = TCPServer.open(9292)
-    @count = 0
-    @hello_count = 0
+    @response_body = ResponseBody.new
   end
 
   def start
-    @count += 1
+    response_body.count
     puts "Ready for a request"
     @client = @tcp_server.accept
     response_control = response_control(request)
@@ -46,52 +44,52 @@ class Server
       response = diagnostics(request_lines)
       @status_code = "http/1.1 200 ok"
     when path == "/hello"
-      response = hello + diagnostics(request_lines)
+      response = response_body.hello + diagnostics(request_lines)
       @status_code = "http/1.1 200 ok"
     when path == "/datetime"
-      response = datetime + diagnostics(request_lines)
+      response = response_body.datetime + diagnostics(request_lines)
       @status_code = "http/1.1 200 ok"
     when path.include?("/word_search")
       word = value(path)
-      response = word_search(word)
+      response = response_body.word_search(word)
       @status_code = "http/1.1 200 ok"
     when path == "/start_game" && verb == "POST"
-      if @game.nil?
-        response = start_game
+      if response_body.game.nil?
+        response = response_body.start_game
         @status_code = "http/1.1 301 Moved Permanently"
         @location = "Location: http://127.0.0.1:9292/start_game"
       else
-        response = html_formatter("Forbidden")
+        response = response_body.html_formatter("Forbidden")
         @status_code = "http/1.1 403 Forbidden"
       end
     when path == "/start_game" && verb == "GET"
-      response = html_formatter("POST a guess in the body of /game, good luck!")
+      response = response_body.html_formatter("POST a guess in the body of /game, good luck!")
       @status_code = "http/1.1 200 ok"
     when path == "/game" && verb == "GET"
-      response = @game.feedback
+      response = response_body.game.feedback unless response_body.game.nil?
       @status_code = "http/1.1 200 ok"
     when path == "/game" && verb == "POST"
       guess = get_guess(request_lines, client)
-      response = @game.play(guess)
+      response = response_body.game.play(guess) unless response_body.game.nil?
       @status_code = "http/1.1 301 Moved Permanently"
       @location = "Location: http://127.0.0.1:9292/game"
     when path == "/shutdown"
-      response = html_formatter("Total count:(#{@count})")
+      response = response_body.html_formatter("Total count:(#{@count})")
       @status_code = "http/1.1 200 ok"
       responder(response)
       client.close
     when path == "/force_error"
-      response = html_formatter("ServerError")
+      response = response_body.html_formatter("ServerError")
       @status_code = "http/1.1 500 Internal Server Error"
     else
-      response = html_formatter("404 not found")
+      response = response_body.html_formatter("404 not found")
       @status_code = "http/1.1 404 Not Found"
     end
     response
   end
 
   def responder(response)
-    @formatted_response = html_formatter(response)
+    @formatted_response = response_body.html_formatter(response)
     headers = headers(@formatted_response)
     if @status_code == "http/1.1 301 Moved Permanently"
       headers.insert(1, @location)
