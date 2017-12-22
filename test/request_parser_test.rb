@@ -8,6 +8,7 @@ require 'minitest/autorun'
 require 'minitest/pride'
 
 class RequestParserTest < Minitest::Test
+  include RequestParser
 
   GET_REQUEST = [ "GET / HTTP/1.1",
                   "Host: 127.0.0.1:9292",
@@ -33,64 +34,38 @@ class RequestParserTest < Minitest::Test
                    "Accept-Encoding: gzip, deflate, br",
                    "Accept-Language: en-US,en;q=0.9"]
 
-  def test_it_exists
-    parser = RequestParser.new
-
-    assert_instance_of RequestParser, parser
-  end
-
   def test_verb_returns_verb_from_request
-    parser = RequestParser.new
-
-    assert_equal "GET", parser.verb(GET_REQUEST)
+    assert_equal "GET", verb(GET_REQUEST)
   end
 
   def test_path_returns_path_from_request
-    parser = RequestParser.new
-
-    assert_equal "/", parser.path(GET_REQUEST)
+    assert_equal "/", path(GET_REQUEST)
   end
 
   def test_protocol_returns_protocol_from_request
-    parser = RequestParser.new
-
-    assert_equal "HTTP/1.1", parser.protocol(GET_REQUEST)
+    assert_equal "HTTP/1.1", protocol(GET_REQUEST)
   end
 
   def test_host_returns_host_from_request
-    parser = RequestParser.new
-
-    assert_equal "127.0.0.1", parser.host(GET_REQUEST)
+    assert_equal "127.0.0.1", host(GET_REQUEST)
   end
 
   def test_port_returns_port_from_request
-    parser = RequestParser.new
-
-    assert_equal "9292", parser.port(GET_REQUEST)
+    assert_equal "9292", port(GET_REQUEST)
   end
 
   def test_accept_returns_accept_from_request
-    parser = RequestParser.new
-
-    assert_equal "*/*", parser.accept(GET_REQUEST)
+    assert_equal "*/*", accept(GET_REQUEST)
   end
 
   def test_value_gets_value_from_path_parameter
-    parser = RequestParser.new
-
-    assert_equal "hi", parser.value("/word_search?word=hi")
-    assert_nil parser.value("/")
+    assert_equal "hi", value("/word_search?word=hi")
+    assert_nil value("/")
   end
 
-  def test_post_processor_returns_content_length_integer
-    parser = RequestParser.new
-
-    assert_equal 224, parser.get_content_length(POST_REQUEST)
-    assert_nil parser.get_content_length(GET_REQUEST)
-  end
-
-  def test_get_guess_returns_post_body_value
-
+  def test_get_content_length_returns_content_length_integer
+    assert_equal 224, get_content_length(POST_REQUEST)
+    assert_nil get_content_length(GET_REQUEST)
   end
 
 end

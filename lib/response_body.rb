@@ -1,5 +1,7 @@
 module ResponseBody
 
+  attr_reader :game, :finder
+
   def html_formatter(content)
     "<html><head></head><body>#{content}</body></html>"
   end
@@ -25,7 +27,7 @@ module ResponseBody
   end
 
   def word_search(word)
-    finder = WordFinder.new
+    @finder = WordFinder.new
     finder.contains?(word)
   end
 
